@@ -1,17 +1,25 @@
 /* Central Texas Now — page views: Home, Section, Article. Exported to window. */
 const { useEffect: useEffectPages } = React;
 
-/* Photo = a user-fillable <image-slot>. Same id across placements => one drop
-   fills every appearance of that story. Navigation lives on headlines, not the
-   image, so clicking an empty slot opens the file picker without also routing. */
+/* Resolve a story image: prefer a bundler-inlined blob (standalone export),
+   else the normal img/<id>.jpg path used in the live project. */
+function CTN_IMG(id) {
+  return (window.__resources && window.__resources[id]) || ("img/" + id + ".jpg");
+}
+
+/* Photo = a story image. Same id across placements shares the same picture.
+   The container carries the brand gradient, so if the image is missing the
+   gradient shows through. Navigation lives on headlines, not the image. */
 function Photo({ slot, cap, className = "", ratio }) {
   const wrapStyle = {};
   if (ratio) wrapStyle.aspectRatio = ratio;
+  const story = window.CTN_DATA.byId(slot);
+  if (story && story.hero) wrapStyle.background = story.hero;
   return (
     <div className={"ctn-photo " + className} style={wrapStyle}>
       <image-slot
         id={"img-" + slot}
-        src={"img/" + slot + ".jpg"}
+        src={CTN_IMG(slot)}
         placeholder={cap || "Drop a photo"}
         radius="3"
         style={{ width: "100%", height: "100%", display: "block" }}
@@ -43,11 +51,11 @@ function HomePage({ go }) {
 
   return (
     <div className="ctn-home">
-      {/* full-bleed hero — image-slot behind, headline navigates */}
+      {/* full-bleed hero — image behind, headline navigates */}
       <section className="ctn-hero" style={{ background: lead.hero }}>
         <image-slot
           id={"img-" + lead.id}
-          src={"img/" + lead.id + ".jpg"}
+          src={CTN_IMG(lead.id)}
           placeholder="Drop the lead photo"
           className="ctn-hero-slot"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block" }}
