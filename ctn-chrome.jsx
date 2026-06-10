@@ -12,6 +12,7 @@ function Icon({ name, size = 18, stroke = 1.6 }) {
     back: <><path d="M19 12H5M11 18l-6-6 6-6" /></>,
     clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
     menu: <><path d="M3 6h18M3 12h18M3 18h18" /></>,
+    close: <><path d="M6 6l12 12M18 6L6 18" /></>,
     mail: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></>,
   };
   return <svg {...common} aria-hidden="true">{paths[name]}</svg>;
@@ -42,26 +43,57 @@ function Masthead({ go, route, mastStyle }) {
   const sections = window.CTN_DATA.SECTIONS;
   const navKeys = ["news", "crime", "weather", "sports", "politics", "community"];
   const activeSection = route.name === "section" ? route.slug : (route.name === "article" ? window.CTN_DATA.byId(route.id)?.section : null);
+  const [menuOpen, setMenuOpen] = useStateChrome(false);
+  const navTo = (path) => { setMenuOpen(false); go(path); };
 
   const Logo = (
-    <a className="ctn-logo" onClick={() => go("home")}>
+    <a className="ctn-logo" onClick={() => navTo("home")}>
       <span className="ctn-logo-ct">Central Texas</span>
       <span className="ctn-logo-now">Now</span>
     </a>
+  );
+
+  const Burger = (
+    <button
+      className={"ctn-burger" + (menuOpen ? " open" : "")}
+      aria-label={menuOpen ? "Close menu" : "Open menu"}
+      aria-expanded={menuOpen}
+      onClick={() => setMenuOpen((v) => !v)}
+    >
+      <Icon name={menuOpen ? "close" : "menu"} size={22} />
+    </button>
+  );
+
+  const MobileMenu = (
+    <div className={"ctn-mobile-menu" + (menuOpen ? " open" : "")}>
+      <nav className="ctn-mm-nav">
+        {navKeys.map((k) => (
+          <a key={k} className={activeSection === k ? "on" : ""} onClick={() => navTo("section/" + k)}>{sections[k].name}</a>
+        ))}
+      </nav>
+      <div className="ctn-mm-util">
+        <a onClick={() => navTo("section/community")}>Newsletters</a>
+        <a onClick={() => navTo("section/news")}>Obituaries</a>
+        <a onClick={() => navTo("section/weather")}>Traffic</a>
+      </div>
+      <a className="ctn-mm-sub" onClick={() => navTo("home")}>Subscribe</a>
+    </div>
   );
 
   if (mastStyle === "bar") {
     return (
       <header className="ctn-mast ctn-mast-bar">
         <div className="ctn-wrap ctn-mast-bar-in">
+          {Burger}
           {Logo}
           <nav className="ctn-nav-inline">
             {navKeys.map((k) => (
-              <a key={k} className={activeSection === k ? "on" : ""} onClick={() => go("section/" + k)}>{sections[k].name}</a>
+              <a key={k} className={activeSection === k ? "on" : ""} onClick={() => navTo("section/" + k)}>{sections[k].name}</a>
             ))}
           </nav>
           <button className="ctn-search-btn" aria-label="Search"><Icon name="search" size={18} /></button>
         </div>
+        {MobileMenu}
       </header>
     );
   }
@@ -70,16 +102,18 @@ function Masthead({ go, route, mastStyle }) {
     return (
       <header className="ctn-mast ctn-mast-serif">
         <div className="ctn-wrap ctn-mast-center">
-          <a className="ctn-logo ctn-logo-serif" onClick={() => go("home")}>Central Texas <em>Now</em></a>
+          {Burger}
+          <a className="ctn-logo ctn-logo-serif" onClick={() => navTo("home")}>Central Texas <em>Now</em></a>
           <div className="ctn-mast-tag">Waco · Temple · Killeen · Fort Cavazos · Belton</div>
         </div>
         <nav className="ctn-nav-rule">
           <div className="ctn-wrap ctn-nav-rule-in">
             {navKeys.map((k) => (
-              <a key={k} className={activeSection === k ? "on" : ""} onClick={() => go("section/" + k)}>{sections[k].name}</a>
+              <a key={k} className={activeSection === k ? "on" : ""} onClick={() => navTo("section/" + k)}>{sections[k].name}</a>
             ))}
           </div>
         </nav>
+        {MobileMenu}
       </header>
     );
   }
@@ -88,10 +122,11 @@ function Masthead({ go, route, mastStyle }) {
   return (
     <header className="ctn-mast ctn-mast-block">
       <div className="ctn-wrap ctn-mast-block-in">
+        {Burger}
         {Logo}
         <nav className="ctn-nav-block">
           {navKeys.map((k) => (
-            <a key={k} className={activeSection === k ? "on" : ""} onClick={() => go("section/" + k)}>{sections[k].name}</a>
+            <a key={k} className={activeSection === k ? "on" : ""} onClick={() => navTo("section/" + k)}>{sections[k].name}</a>
           ))}
         </nav>
         <div className="ctn-mast-right">
@@ -99,6 +134,7 @@ function Masthead({ go, route, mastStyle }) {
           <button className="ctn-search-btn ghost" aria-label="Search"><Icon name="search" size={17} /></button>
         </div>
       </div>
+      {MobileMenu}
     </header>
   );
 }
